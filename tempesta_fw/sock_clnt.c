@@ -349,8 +349,7 @@ tfw_listen_sock_add(const TfwAddr *addr, int type)
 	list_add(&ls->list, &tfw_listen_socks);
 	ls->addr = *addr;
 
-	/* Port is placed at the same offset in sockaddr_in and sockaddr_in6. */
-	tfw_classifier_add_inport(addr->v4.sin_port);
+	tfw_classifier_add_inport(tfw_addr_port(addr));
 
 	return 0;
 }
@@ -383,7 +382,8 @@ tfw_listen_sock_start(TfwListenSock *ls)
 
 	TFW_LOG_ADDR("Open listen socket on", addr);
 
-	r = ss_sock_create(addr->family, SOCK_STREAM, IPPROTO_TCP, &sk);
+	r = ss_sock_create(tfw_addr_sa_family(addr), SOCK_STREAM, IPPROTO_TCP,
+	                   &sk);
 	if (r) {
 		TFW_ERR_NL("can't create listening socket (err: %d)\n", r);
 		return r;
@@ -404,7 +404,7 @@ tfw_listen_sock_start(TfwListenSock *ls)
 
 	inet_sk(sk)->freebind = 1;
 	sk->sk_reuse = 1;
-	r = ss_bind(sk, &addr->sa, tfw_addr_sa_len(addr));
+	r = ss_bind(sk, tfw_addr_sa(addr), tfw_addr_sa_len(addr));
 	if (r) {
 		TFW_ERR_ADDR("can't bind to", addr);
 		return r;
@@ -466,9 +466,8 @@ tfw_cfgop_listen(TfwCfgSpec *cs, TfwCfgEntry *ce)
 			goto parse_err;
 
 		/* For single port, use 0.0.0.0:port (IPv4, but not IPv6). */
-		addr.v4.sin_family = AF_INET;
-		addr.v4.sin_addr.s_addr = INADDR_ANY;
-		addr.v4.sin_port = htons(port);
+		addr = tfw_addr_new_v4(INADDR_ANY, htons(port));
+
 	} else {
 		r = tfw_addr_pton(&TFW_STR_FROM(in_str), &addr);
 		if (r)

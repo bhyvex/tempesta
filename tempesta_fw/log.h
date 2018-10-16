@@ -156,7 +156,7 @@ do {									\
 #define TFW_WARN_MOD_ADDR6(mod, check, addr, fmt, ...)			\
 do {									\
 	char abuf[TFW_ADDR_STR_BUF_SIZE] = {0};				\
-	tfw_addr_fmt_v6(&(addr)->v6.sin6_addr, 0, abuf);		\
+	tfw_addr_fmt_v6(&(addr)->sin6_addr, 0, abuf);			\
 	TFW_WARN(#mod ": %s for %s" fmt, check, abuf, ##__VA_ARGS__);	\
 } while (0)
 

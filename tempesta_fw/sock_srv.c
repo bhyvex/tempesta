@@ -138,7 +138,8 @@ tfw_sock_srv_connect_try(TfwSrvConn *srv_conn)
 
 	addr = &srv_conn->peer->addr;
 
-	r = ss_sock_create(addr->family, SOCK_STREAM, IPPROTO_TCP, &sk);
+	r = ss_sock_create(tfw_addr_sa_family(addr), SOCK_STREAM, IPPROTO_TCP,
+	                   &sk);
 	if (r) {
 		TFW_ERR("Unable to create server socket\n");
 		return;
@@ -182,7 +183,7 @@ tfw_sock_srv_connect_try(TfwSrvConn *srv_conn)
 	 * Thus we don't need syncronization for ss_connect().
 	 */
 	TFW_INC_STAT_BH(serv.conn_attempts);
-	r = ss_connect(sk, &addr->sa, tfw_addr_sa_len(addr), 0);
+	r = ss_connect(sk, tfw_addr_sa(addr), tfw_addr_sa_len(addr), 0);
 	if (r) {
 		if (r != SS_SHUTDOWN)
 			TFW_ERR("Unable to initiate a connect to server: %d\n",
